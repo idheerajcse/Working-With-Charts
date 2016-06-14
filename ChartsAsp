@@ -1,0 +1,117 @@
+
+http://www.aspsnippets.com/Articles/Create-ASPNet-Chart-Control-from-Database-using-C-and-VBNet-Example.aspx
+
+<configuration>
+    <appSettings>
+        <addkey="ChartImageHandler"value="storage=file;timeout=20;" />
+    </appSettings>
+    <connectionStrings>
+        <addname="conString"
+        connectionString="Data Source=.\SQL2005;database=Northwind;Integrated Security=true"/>
+    </connectionStrings>
+ 
+    <system.web>
+        <compilationdebug="true"targetFramework="4.0">
+            <assemblies>
+                <addassembly="System.Web.DataVisualization, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31BF3856AD364E35"/>
+            </assemblies>
+        </compilation>
+        <httpHandlers>
+            <addpath="ChartImg.axd"verb="GET,HEAD,POST"type="System.Web.UI.DataVisualization.Charting.ChartHttpHandler, System.Web.DataVisualization, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"validate="false"/>
+        </httpHandlers>
+        <pages>
+            <controls>
+                <addtagPrefix="asp"namespace="System.Web.UI.DataVisualization.Charting"assembly="System.Web.DataVisualization, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"/>
+            </controls>
+        </pages>
+    </system.web>
+    <system.webServer>
+        <handlers>
+            <removename="ChartImageHandler"/>
+            <addname="ChartImageHandler"preCondition="integratedMode"verb="GET,HEAD,POST"path="ChartImg.axd" type="System.Web.UI.DataVisualization.Charting.ChartHttpHandler, System.Web.DataVisualization, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"/>
+        </handlers>
+    </system.webServer>
+</configuration>
+ 
+ 
+HTML Markup
+Below is the HTML Markup of the page. It has an ASP.Net DropDownList and an ASP.Net Chart Control. The DropDownList is populated with countries and when a country is selected, the chart is populated with the statistics of orders of different cities in the selected country.
+<asp:DropDownList ID="ddlCountries" runat="server"
+onselectedindexchanged="ddlCountries_SelectedIndexChanged" AutoPostBack = "true">
+</asp:DropDownList><hr />
+<asp:Chart ID="Chart1" runat="server" Height="300px" Width="400px" Visible = "false">
+    <Titles>
+        <asp:Title ShadowOffset="3" Name="Items" />
+    </Titles>
+    <Legends>
+        <asp:Legend Alignment="Center" Docking="Bottom" IsTextAutoFit="False" Name="Default" LegendStyle="Row" />
+    </Legends>
+    <Series>
+        <asp:Series Name="Default" />
+    </Series>
+    <ChartAreas>
+        <asp:ChartArea Name="ChartArea1" BorderWidth="0" />
+    </ChartAreas>
+</asp:Chart>
+ 
+ 
+Namespaces
+You will need to import the following Namespaces
+C#
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+ 
+VB.Net
+Imports System.Data
+Imports System.Data.SqlClient
+Imports System.Web.UI.DataVisualization.Charting
+ 
+Populating the DropDownList and Chart
+Below is the code to populate the DropDownList and the Chart control.
+C#
+protected void Page_Load(object sender, EventArgs e)
+{
+    if (!IsPostBack)
+    {
+        string query = "select distinct shipcountry from orders";
+        DataTable dt = GetData(query);
+        ddlCountries.DataSource = dt;
+        ddlCountries.DataTextField = "shipcountry";
+        ddlCountries.DataValueField = "shipcountry";
+        ddlCountries.DataBind();
+        ddlCountries.Items.Insert(0, new ListItem("Select", ""));
+    }
+}
+   
+protected void ddlCountries_SelectedIndexChanged(object sender, EventArgs e)
+{
+    Chart1.Visible = ddlCountries.SelectedValue != "";
+    string query = string.Format("select shipcity, count(orderid) from orders where shipcountry = '{0}' group by shipcity", ddlCountries.SelectedValue);
+    DataTable dt = GetData(query);
+    string[] x = new string[dt.Rows.Count];
+    int[] y = new int[dt.Rows.Count];
+    for (int i = 0; i < dt.Rows.Count; i++)
+    {
+        x[i] = dt.Rows[i][0].ToString();
+        y[i] = Convert.ToInt32(dt.Rows[i][1]);
+    }
+    Chart1.Series[0].Points.DataBindXY(x, y);
+    Chart1.Series[0].ChartType = SeriesChartType.Pie;
+    Chart1.ChartAreas["ChartArea1"].Area3DStyle.Enable3D = true;
+    Chart1.Legends[0].Enabled = true;
+}
+ 
+private static DataTable GetData(string query)
+{
+    DataTable dt = new DataTable();
+    SqlCommand cmd = new SqlCommand(query);
+    String constr = ConfigurationManager.ConnectionStrings["ConString"].ConnectionString;
+    SqlConnection con = new SqlConnection(constr);
+    SqlDataAdapter sda = new SqlDataAdapter();
+    cmd.CommandType = CommandType.Text;
+    cmd.Connection = con;
+    sda.SelectCommand = cmd;
+    sda.Fill(dt);
+    return dt;
+}
