@@ -1,0 +1,181 @@
+jQuery Google Chart (Pie) Example in Asp.net with Database using C#, VB.NET
+By: Suresh Dasari Jun 19, 2014
+Categories: Asp.net , C#.Net , Charts , Google Charts , JQuery , VB.NET
+ 
+ 
+Introduction:
+
+Here I will explain how to create jQuery google chart (pie) example in asp.net with database using c#, vb.net or create dynamic google pie chart in asp.net with database example in  c#, vb.net.
+
+Description:
+
+In previous articles I explained Ajax Pie chart example in asp.net with database, jQuery change image on mouse over, jQuery show alert message before leaving from webpage, jQuery drag and drop gridview rows in asp.net and many articles related to jQuery, Ajax and asp.net. Now I explain how to create dynamic jQuery google chart (pie) example in asp.net with database using c#, vb.net.
+
+First design table one table countrydetails in your database like as shown below
+
+Column Name
+Data Type
+Allow Nulls
+ID
+Int(set identity property=true)
+No
+name
+Varchar(50)
+no
+value
+Int
+no
+Once we create table we need to enter some dummy data for our application purpose.
+
+To implement jQuery google chart (pie) example in asp.net write the code like as shown below in your aspx page like this
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1" runat="server">
+<title>jQuery Google Pie Chart Example in asp.net</title>
+<script src="http://code.jquery.com/jquery-1.8.2.js"></script>
+<script src="http://www.google.com/jsapi" type="text/javascript"></script>
+<script type="text/javascript">
+// Global variable to hold data
+google.load('visualization', '1', { packages: ['corechart'] });
+</script>
+<script type="text/javascript">
+$(function () {
+$.ajax({
+type: 'POST',
+dataType: 'json',
+contentType: 'application/json',
+url: 'GoogleChart.aspx/GetChartData',
+data: '{}',
+success:
+function (response) {
+drawchart(response.d);
+},
+
+error: function () {
+alert("Error loading data! Please try again.");
+}
+});
+})
+function drawchart(dataValues) {
+var data = new google.visualization.DataTable();
+data.addColumn('string', 'Column Name');
+data.addColumn('number', 'Column Value');
+for (var i = 0; i < dataValues.length; i++) {
+data.addRow([dataValues[i].Countryname, dataValues[i].Total]);
+}
+new google.visualization.PieChart(document.getElementById('chartdiv')).
+draw(data, { title: "Show Google Chart in Asp.net" });
+}
+</script>
+</head>
+<body>
+<form id="form1" runat="server">
+<div id="chartdiv" style="width: 600px; height: 350px;">
+</div>
+</form>
+</body>
+</html>
+C# Code
+
+
+ 
+
+In code behind add the following namespaces
+
+
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Web.Services;
+After adding namespaces and write the following code in page load
+
+
+public partial class GoogleChart : System.Web.UI.Page
+{
+protected void Page_Load(object sender, EventArgs e)
+{
+}
+[WebMethod]
+public static List<countrydetails> GetChartData()
+{
+DataTable dt = new DataTable();
+using (SqlConnection con = new SqlConnection("Data Source=SureshDasari;Integrated Security=true;Initial Catalog=MySampleDB"))
+{
+con.Open();
+SqlCommand cmd = new SqlCommand("select name,total=value from countrydetails order by total desc", con);
+SqlDataAdapter da = new SqlDataAdapter(cmd);
+da.Fill(dt);
+con.Close();
+}
+List<countrydetails> dataList = new List<countrydetails>();
+foreach (DataRow dtrow in dt.Rows)
+{
+countrydetails details = new countrydetails();
+details.Countryname = dtrow[0].ToString();
+details.Total = Convert.ToInt32(dtrow[1]);
+dataList.Add(details);
+}
+return dataList;
+}
+}
+public class countrydetails
+{
+public string Countryname { get; set; }
+public int Total { get; set; }
+}
+VB.NET Code
+
+
+Imports System.Collections.Generic
+Imports System.Data
+Imports System.Data.SqlClient
+Imports System.Web.Services
+
+Partial Class VBCode
+Inherits System.Web.UI.Page
+Protected Sub Page_Load(sender As Object, e As EventArgs)
+
+End Sub
+<WebMethod> _
+Public Shared Function GetChartData() As List(Of countrydetails)
+Dim dt As New DataTable()
+Using con As New SqlConnection("Data Source=SureshDasari;Integrated Security=true;Initial Catalog=MySampleDB")
+con.Open()
+Dim cmd As New SqlCommand("select name,total=value from countrydetails order by total desc", con)
+Dim da As New SqlDataAdapter(cmd)
+da.Fill(dt)
+con.Close()
+End Using
+Dim dataList As New List(Of countrydetails)()
+For Each dtrow As DataRow In dt.Rows
+Dim details As New countrydetails()
+details.Countryname = dtrow(0).ToString()
+details.Total = Convert.ToInt32(dtrow(1))
+dataList.Add(details)
+Next
+Return dataList
+End Function
+End Class
+Public Class countrydetails
+Public Property Countryname() As String
+Get
+Return m_Countryname
+End Get
+Set
+m_Countryname = Value
+End Set
+End Property
+Private m_Countryname As String
+Public Property Total() As Integer
+Get
+Return m_Total
+End Get
+Set
+m_Total = Value
+End Set
+End Property
+Private m_Total As Integer
+End Class
+Demo
